@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mc-monitor
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mc-monitor
+  template:
+    metadata:
+      labels:
+        app: mc-monitor
+    spec:
+      containers:
+      - name: mc-monitor
+        image: itzg/mc-monitor:latest
+        args:
+          - export-for-prometheus
+          - --servers=minecraft-service.default.svc.cluster.local:25565
+        ports:
+        - name: metrics
+          containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mc-monitor
+  namespace: monitoring
+  labels:
+    app: mc-monitor
+spec:
+  selector:
+    app: mc-monitor
+  ports:
+  - name: metrics
+    port: 8080
+    targetPort: metrics

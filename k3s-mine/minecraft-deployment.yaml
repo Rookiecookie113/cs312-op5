@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minecraft
+  labels:
+    app: minecraft
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  selector:
+    matchLabels:
+      app: minecraft
+  template:
+    metadata:
+      labels:
+        app: minecraft
+    spec:
+      imagePullSecrets:
+        - name: ecr-secret
+      containers:
+        - name: minecraft
+          image: 851725442631.dkr.ecr.us-east-1.amazonaws.com/misttryh-mine:v1
+          env:
+            - name: EULA
+              value: "TRUE"
+            - name: MEMORY
+              value: "4G"
+            - name: VERSION
+              value: "1.21.1"
+            - name: MOTD
+              value: Hurrsh Minecraft Server
+          ports:
+            - containerPort: 25565
+
+          startupProbe:
+            tcpSocket:
+              port: 25565
+            failureThreshold: 60
+            periodSeconds: 10
+
+          livenessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 60
+            periodSeconds: 20
+
+          readinessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2"
+
+          volumeMounts:
+            - name: world-data
+              mountPath: /data
+            - name: config
+              mountPath: /data/server.properties
+              subPath: server.properties
+
+      volumes:
+        - name: world-data
+          persistentVolumeClaim:
+            claimName: minecraft-world
+        - name: config
+          configMap:
+            name: minecraft-config
+            items:
+              - key: server.properties
+                path: server.properties
