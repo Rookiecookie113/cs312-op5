@@ -1,0 +1,16 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+runcmd:
+  - zypper --non-interactive install curl iptables iptables-legacy
+  - update-alternatives --set iptables /usr/sbin/iptables-legacy
+  - update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+  - sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0 /' /etc/default/grub
+  - grub2-mkconfig -o /boot/grub2/grub.cfg
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik" sh -
+
+power_state:
+  mode: reboot
+  message: "Rebooting to apply cgroup and iptables changes"
+  timeout: 30
