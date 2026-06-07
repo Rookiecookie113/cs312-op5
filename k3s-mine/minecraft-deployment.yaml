@@ -66,8 +66,7 @@ spec:
             - name: world-data
               mountPath: /data
             - name: config
-              mountPath: /data/server.properties
-              subPath: server.properties
+              mountPath: /config
 
       volumes:
         - name: world-data
